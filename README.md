@@ -1,5 +1,6 @@
 # my simple mock server
 
+[![npm version](https://badge.fury.io/js/mock-lib.svg)](https://badge.fury.io/js/mock-lib)
 
 ### DEMO
 
