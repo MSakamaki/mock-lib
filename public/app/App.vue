@@ -5,9 +5,13 @@
         v-for="(state, index) in states"
         v-bind:value="state.id"
         v-bind:key='index'
-        v-bind:class="{ active: state.id === select.id }"
-        @click.native="onSelected(state.id)">
+        v-bind:class="{ active: state.id === select.id &&  state.prefix === select.prefix }"
+        @click.native="onSelected(state.id, state.prefix)">
         <div class="menu-url">
+          <span>
+            <span class="menu-badge-left prefix"> prefix </span>
+            <span class="menu-badge-right"> {{ state.prefix }} </span>
+          </span>
           <span>
             <span class="menu-badge-left url"> URL </span>
             <span class="menu-badge-right"> {{ state.id }} </span>
@@ -100,8 +104,8 @@ export default class AppComponent extends Vue {
     });
   }
 
-  public onSelected(id: string) {
-    this.$store.dispatch('api/selected', { select: id });
+  public onSelected(id: string, prefix: string) {
+    this.$store.dispatch('api/selected', { select: id, prefix: prefix });
   }
 
   onSelectWait(cmd:string) {
@@ -154,6 +158,9 @@ export default class AppComponent extends Vue {
 }
 .menu-badge-left.url {
   background-color: #777777;
+}
+.menu-badge-left.prefix {
+  background-color: #5e5e5e;
 }
 .menu-badge-right {
   padding: 1px 4px 1px 2px;

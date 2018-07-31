@@ -4,11 +4,22 @@ import { join } from 'path';
 // import { fixtureConfig } from './_fixture/config';
 
 export interface IDB {
-  reload(apiKey: string): Promise<any>;
-  search(apiKey: string): Promise<{}>;
-  create(apiKey: string, data: object): Promise<{}>;
+  reload(apiKey: string): Promise<void>;
+  search(apiKey: string): Promise<Fixture>;
+  create(apiKey: string, data: object): Promise<void>;
 }
 
+export interface Fixture {
+  API_KEY: string;
+  API_NAME: string;
+  data: any | any[];
+  dev: Dev;
+}
+
+export interface Dev {
+  status: number;
+  wait: number;
+}
 
 /**
  * やらないといけないこと
@@ -20,7 +31,7 @@ export class DB implements IDB {
   /**
    * Immutable.Map()
    */
-  private DATA = Map();
+  private DATA = Map<string, Fixture>();
 
   /**
    * JSONデータ用Prefix RegExp
@@ -31,43 +42,61 @@ export class DB implements IDB {
    * Load initialize data;
    */
   constructor(private fixtreDir: string) {
-    this.readFixture(fixtreDir).forEach(
-      fixtre => this.setFixtureData(fixtre),
-    );
+    this.readFixture(fixtreDir).forEach(fixtre => this.setFixtureData(fixtre));
   }
 
   /**
    * searchd data
    * @param apiKey 取得するキー
    */
-  public search(apiKey: string): Promise<any> {
-    return Promise.resolve(this.DATA.get(apiKey));
+  public async search(apiKey: string): Promise<Fixture> {
+    return await (<Fixture>this.DATA.get(apiKey));
   }
 
   /**
    * 指定したAPIキーのデータを再読込する
    */
-  public reload(apiKey: string): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const updateAPIs: any[] = [
-        ...this.readFixture(
-          this.fixtreDir,
-        ).filter((data: any) => data.API_KEY === apiKey),
-      ];
+  public async reload(apiKey: string): Promise<any> {
+    const updateAPIs: any[] = [
+      ...this.readFixture(this.fixtreDir).filter(
+        (data: any) => data.API_KEY === apiKey,
+      ),
+    ];
 
-      if (updateAPIs.length === 1) {
-        this.DATA = this.DATA.set(apiKey, updateAPIs[0].data);
-        resolve();
-      } else {
-        reject();
-      }
+    if (updateAPIs.length === 1) {
+      this.DATA = this.DATA.set(apiKey, {
+        ...this.DATA.get(apiKey),
+        data: updateAPIs[0].data,
+      });
+    } else {
+      throw Error('updateAPIs key not found');
+    }
+  }
+
+  public async create(apiKey: string, data: any): Promise<void> {
+    this.DATA = this.DATA.set(apiKey, <Fixture>{
+      ...this.DATA.get(apiKey),
+      data: data,
     });
   }
 
-  public create(apiKey: string, data: any): Promise<{}> {
-    return new Promise(resolve => {
-      this.DATA = this.DATA.set(apiKey, data);
-      resolve();
+  public async setWait(apiKey: string, wait: number): Promise<void> {
+    this.DATA = this.DATA.set(apiKey, <Fixture>{
+      ...this.DATA.get(apiKey),
+      dev: {
+        ...this.DATA.get(apiKey).dev,
+        wait: wait,
+      },
+    });
+  }
+
+  public async setState(apiKey: string, state: number): Promise<void> {
+    this.DATA = this.DATA.set(apiKey, <Fixture>{
+      ...this.DATA.get(apiKey),
+      dev: {
+        ...this.DATA.get(apiKey).dev,
+        state: state,
+      },
     });
   }
 
@@ -75,17 +104,19 @@ export class DB implements IDB {
     return JSON.parse(readFileSync(fullpath, 'utf-8'));
   }
 
-  private setFixtureData(fixture: any): void {
-    this.DATA = this.DATA.set(fixture.API_KEY, fixture.data).set(
-      `${fixture.API_KEY}.name`,
-      fixture.API_NAME,
-    );
+  private setFixtureData(fixture: Fixture): void {
+    this.DATA = this.DATA.set(fixture.API_KEY, {
+      ...fixture,
+      dev: {
+        status: 200,
+        wait: 0,
+      },
+    });
   }
 
   private readFixture(PATH: string) {
     return readdirSync(PATH)
       .filter((file: string) => this.JsonRxp.test(file))
-      .map(files => this.loadFixture(join(PATH, files)),
-      );
+      .map(files => this.loadFixture(join(PATH, files))) as Fixture[];
   }
 }

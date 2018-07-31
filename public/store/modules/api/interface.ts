@@ -4,6 +4,7 @@ export interface State {
   apis: string[];
   states: ApiState[];
   selectId: string;
+  prefix: string;
 }
 
 export interface Getters {
@@ -11,6 +12,7 @@ export interface Getters {
   states: ApiState[],
   select: ApiState;
   selectId: string;
+  prefix: string;
 }
 
 export interface Mutations {

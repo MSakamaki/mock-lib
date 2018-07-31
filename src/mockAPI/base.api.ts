@@ -1,6 +1,6 @@
 import * as http from 'http';
 import * as url from 'url';
-import { IDB } from './db';
+import { DB } from './db';
 
 export interface IApiClass {
   get(
@@ -23,29 +23,37 @@ export interface IApiClass {
     req: http.IncomingMessage,
     res: http.ServerResponse,
     next: Function,
+    prefix: string,
   ): void;
+
   debug_put(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    next: Function,
+  ): void;
+
+  debug_delete(
     req: http.IncomingMessage,
     res: http.ServerResponse,
     next: Function,
   ): void;
 }
 
-export interface DevApiStatus {
+export interface ApiDevStatus {
   id: string;
-  status: number;
   wait: number;
+  status: number;
   data: any;
   name: string;
 }
 
 export class BaseAPI implements IApiClass {
   /** fixutre用、APIの基本キー */
-  public API_KEY: string;
+  // public API_KEY: string;
   /** api　レスポンスコード(wait, http status) (apiキー + .status) */
-  public DEV_API_KEY: string;
-  /** fixture data  (apiキー + .name)*/
-  public NAME_API_KEY: string;
+  // private DEV_API_KEY: string;
+  // /** fixture data  (apiキー + .name)*/
+  // public NAME_API_KEY: string;
 
   /**
    * ローカルデータを取得する
@@ -59,20 +67,14 @@ export class BaseAPI implements IApiClass {
   /**
    * コンストラクタ
    * @param DB DBクラス
-   * @param api API文字列
-   * @param apiType APIタイプ(/app)
+   * @param API_KEY API文字列
+   * @param REG_EXP_PATH match url regexp string
    */
-  constructor(private db: IDB, apiUrl: string) {
-
-    this.API_KEY = apiUrl;
-    this.DEV_API_KEY = `${this.API_KEY}.status`;
-    this.NAME_API_KEY = `${this.API_KEY}.name`;
-    /** default api status */
-    this.db.create(this.DEV_API_KEY, {
-      status: 200,
-      wait: 0,
-    });
-  }
+  constructor(
+    private db: DB,
+    public API_KEY: string,
+    public REG_EXP_PATH = '',
+  ) {}
 
   public get(
     _req: http.IncomingMessage,
@@ -137,12 +139,18 @@ export class BaseAPI implements IApiClass {
     _req: http.IncomingMessage,
     res: http.ServerResponse,
     _next: Function,
+    _prefix: string,
   ) {
     this.getDevelopState()
       .then(status => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(status));
+        res.end(
+          JSON.stringify({
+            ...status,
+            prefix: _prefix,
+          }),
+        );
       })
       .catch(e => console.log('e', e));
   }
@@ -158,22 +166,19 @@ export class BaseAPI implements IApiClass {
     res: http.ServerResponse,
     _next: Function,
   ) {
-    this.getBody(req).then(body => {
+    this.getBody(req).then(async body => {
       const jsonBody: any = JSON.parse(body);
-      const data = jsonBody.data;
 
-      this.db
-        .create(this.API_KEY, data)
-        .then(() => this.setDevelopStatus(jsonBody.status, jsonBody.wait, data))
-        .then(() => {
-          res.statusCode = 200;
-          res.setHeader('Content-Type', 'application/json');
-          res.end(
-            JSON.stringify({
-              RESULT: 'SET DATA',
-            }),
-          );
-        });
+      await this.db.create(this.API_KEY, jsonBody.data);
+      await this.db.setWait(this.API_KEY, jsonBody.wait);
+      await this.db.setState(this.API_KEY, jsonBody.status);
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(
+        JSON.stringify({
+          RESULT: 'SET DATA',
+        }),
+      );
     });
   }
 
@@ -190,8 +195,8 @@ export class BaseAPI implements IApiClass {
   ) {
     this.db
       .reload(this.API_KEY)
-      .then(() => this.data)
-      .then(data => this.setDevelopStatus(200, 0, data))
+      .then(() => this.db.setState(this.API_KEY, 200))
+      .then(() => this.db.setWait(this.API_KEY, 0))
       .then(() => {
         res.statusCode = 200;
         res.setHeader('Content-Type', 'application/json');
@@ -256,7 +261,7 @@ export class BaseAPI implements IApiClass {
     const appParam = await this.getDevelopState();
 
     setTimeout(() => {
-      res.statusCode = statusCode || 200;
+      res.statusCode = statusCode || appParam.status;
       res.end();
     }, appParam.wait);
   }
@@ -267,10 +272,10 @@ export class BaseAPI implements IApiClass {
    */
   protected pushDB(obj: Object): Promise<any> {
     return new Promise(async (resolve, reject) => {
-      const data = await this.db.search(this.API_KEY);
-      if (Array.isArray(data)) {
-        data.push(obj);
-        this.db.create(this.API_KEY, data).then(resolve);
+      const fixture = await this.db.search(this.API_KEY);
+      if (Array.isArray(fixture.data)) {
+        fixture.data.push(obj);
+        this.db.create(this.API_KEY, fixture.data).then(resolve);
       } else {
         reject(`${this.API_KEY} of data is not an Array`);
       }
@@ -335,51 +340,14 @@ export class BaseAPI implements IApiClass {
   /**
    * ステータス返却
    */
-  public getDevelopState(): Promise<DevApiStatus> {
-    return Promise.all([
-      this.db.search(this.DEV_API_KEY),
-      this.db.search(this.API_KEY),
-      this.db.search(this.NAME_API_KEY),
-    ]).then((results: any): DevApiStatus => ({
-      id: this.API_KEY,
-      wait: results[0].wait,
-      status: results[0].status,
-      data: results[1],
-      name: results[2],
-    }));
-  }
-
-  /**
-   * ステータスのセット
-   * @param status HTTPステータス
-   * @param wait APIの待機時間
-   */
-  public setDevelopStatus(
-    status: number,
-    wait: number,
-    _data: any,
-  ): Promise<any> {
-    const setDevParam = async (resolve: any, reject: any) => {
-      const apiDATA = await this.getDevelopState();
-      if (this.NotUndefined(status)) {
-        apiDATA.status = status;
-      }
-      if (this.NotUndefined(wait)) {
-        apiDATA.wait = wait;
-      }
-      this.db
-        .create(this.DEV_API_KEY, apiDATA)
-        .then(resolve)
-        .catch(reject);
+  public async getDevelopState(): Promise<ApiDevStatus> {
+    const fixture = await this.db.search(this.API_KEY);
+    return {
+      id: fixture.API_KEY,
+      wait: fixture.dev.wait,
+      status: fixture.dev.status,
+      data: fixture.data,
+      name: fixture.API_NAME,
     };
-    return new Promise(setDevParam);
-  }
-
-  /**
-   * undefinedかどうかを確認する
-   * @param param 確認するパラメータ
-   */
-  private NotUndefined(param: any): boolean {
-    return 'undefined' !== typeof param;
   }
 }

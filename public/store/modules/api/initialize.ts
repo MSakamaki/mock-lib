@@ -5,6 +5,7 @@ export const initializeState: State = {
   apis: [],
   states: [],
   selectId: '',
+  prefix: '',
 };
 
 export const initSelect: ApiState = {
@@ -13,4 +14,5 @@ export const initSelect: ApiState = {
   status: 0,
   wait: 0,
   data: {},
+  prefix: '',
 };

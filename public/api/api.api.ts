@@ -6,18 +6,18 @@ const HOST = 'http://localhost:3030';
 export class DebugApisAPI {
 
   async get() {
-    return fetch(`${HOST}/apis`)
+    return fetch(`${HOST}/debug/apis`)
       .then(r => r.json() as Promise<string[]>);
   }
 
   async getState(api: string) {
     return fetch(`${HOST}/debug/${api}`)
-      .then(r => r.json() as Promise<ApiState>);
+      .then(r => r.json()) as Promise<ApiState>;
   }
 
-  async putState(url:string, wait:number, status:number, data:any ) {
-
-    return fetch(`/debug/${url}`, {
+  async putState(prefix:string, url:string, wait:number, status:number, data:any ) {
+    console.log(prefix);
+    return fetch(`/debug/${prefix ? `${prefix}/` : '' }${url}`, {
       method: 'PUT',
       body: JSON.stringify({
         wait: wait,
@@ -31,6 +31,7 @@ export class DebugApisAPI {
 
 export interface ApiState {
   id: string;
+  prefix: string;
   name: string;
   status: number;
   wait: number;

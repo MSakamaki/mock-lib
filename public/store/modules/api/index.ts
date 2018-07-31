@@ -21,10 +21,13 @@ const getters: GetterTree<Getters, State> = {
     return state.states;
   },
   select: state => {
-    return state.states.find(s => s.id === state.selectId) || initSelect;
+    return state.states.find(s => s.id === state.selectId && s.prefix === state.prefix ) || initSelect;
   },
   selectId: state => {
     return state.selectId;
+  },
+  prefix: state => {
+    return state.prefix;
   }
 };
 
@@ -37,6 +40,7 @@ const mutations: MutationTree<State> = {
   },
   selected(state, payload) {
     state.selectId = payload.select;
+    state.prefix = payload.prefix;
   }
 };
 
@@ -49,13 +53,14 @@ const actions: ActionTree<Actions, State> = {
   selected({ commit }, payload) {
     commit('selected', {
       select: payload.select,
+      prefix: payload.prefix,
     });
   },
 
   updateWait({ getters, commit }, { wait }) {
     const api = (<Getters>getters).select;
     if (api) {
-      restApi.apis.putState(api.id, wait, api.status, api.data)
+      restApi.apis.putState(api.prefix, api.id, wait, api.status, api.data)
         .then(()=> getAllApis(commit));
     }
   },
@@ -63,14 +68,14 @@ const actions: ActionTree<Actions, State> = {
   updateState({ getters, commit }, { status }) {
     const api = (<Getters>getters).select;
     if (api) {
-      restApi.apis.putState(api.id, api.wait, status, api.data)
+      restApi.apis.putState(api.prefix, api.id, api.wait, status, api.data)
         .then(()=> getAllApis(commit));
     }
   },
   updateData({ getters, commit }, { data }) {
     const api = (<Getters>getters).select;
     if (api) {
-      restApi.apis.putState(api.id, api.wait, api.status, data)
+      restApi.apis.putState(api.prefix, api.id, api.wait, api.status, data)
         .then(()=> getAllApis(commit));
     }
   },
