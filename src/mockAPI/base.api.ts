@@ -1,6 +1,6 @@
 import * as http from 'http';
 import * as url from 'url';
-import { DB } from './db';
+import { DB, Fixture } from './db';
 
 export interface IApiClass {
   get(
@@ -61,7 +61,7 @@ export class BaseAPI implements IApiClass {
   get data(): Promise<any> {
     return new Promise(async resolve => {
       resolve(this.db.search(this.API_KEY));
-    });
+    }).then((fixtre: Fixture) => fixtre.data);
   }
 
   /**
@@ -294,13 +294,13 @@ export class BaseAPI implements IApiClass {
     _next: Function,
   ): Promise<any> {
     const resJSON = async (resolve: Function, reject: Function) => {
-      const data = await this.db.search(this.API_KEY);
+      const fixture = await this.db.search(this.API_KEY);
       const appParam = await this.getDevelopState();
 
       setTimeout(() => {
         res.statusCode = appParam.status;
         res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(data));
+        res.end(JSON.stringify(fixture.data));
         res.on('error', e => reject(e));
         resolve();
       }, appParam.wait);

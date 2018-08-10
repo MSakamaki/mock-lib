@@ -61,7 +61,7 @@ export class UrilRouter {
   ): (browserSync.MiddlewareHandler | browserSync.PerRouteMiddleware)[] {
 
     const handle = new handleClass(this.DB_BASE);
-    const regExpUri = new RegExp(`^${handle.REG_EXP_PATH || handle.API_KEY}`);
+    const regExpUri = new RegExp(`^/${this.prefix}/${handle.REG_EXP_PATH || handle.API_KEY}`);
     const handler = new CreateHandle(handle);
     this.apiList.push(join(this.prefix, handle.API_KEY));
 
