@@ -41,7 +41,7 @@ export class DB implements IDB {
   /**
    * Load initialize data;
    */
-  constructor(private fixtreDir: string) {
+  constructor(private fixtreDir: string, private prefix = '') {
     this.readFixture(fixtreDir).forEach(fixtre => this.setFixtureData(fixtre));
   }
 
@@ -50,7 +50,7 @@ export class DB implements IDB {
    * @param apiKey 取得するキー
    */
   public async search(apiKey: string): Promise<Fixture> {
-    return await (<Fixture>this.DATA.get(apiKey));
+    return await (<Fixture>this.DATA.get(this.prefix + apiKey));
   }
 
   /**
@@ -59,13 +59,13 @@ export class DB implements IDB {
   public async reload(apiKey: string): Promise<any> {
     const updateAPIs: any[] = [
       ...this.readFixture(this.fixtreDir).filter(
-        (data: any) => data.API_KEY === apiKey,
+        (data: any) => data.API_KEY === this.prefix + apiKey,
       ),
     ];
 
     if (updateAPIs.length === 1) {
-      this.DATA = this.DATA.set(apiKey, {
-        ...this.DATA.get(apiKey),
+      this.DATA = this.DATA.set(this.prefix + apiKey, {
+        ...this.DATA.get(this.prefix + apiKey),
         data: updateAPIs[0].data,
       });
     } else {
@@ -74,28 +74,28 @@ export class DB implements IDB {
   }
 
   public async create(apiKey: string, data: any): Promise<void> {
-    this.DATA = this.DATA.set(apiKey, <Fixture>{
-      ...this.DATA.get(apiKey),
+    this.DATA = this.DATA.set(this.prefix + apiKey, <Fixture>{
+      ...this.DATA.get(this.prefix + apiKey),
       data: data,
     });
   }
 
   public async setWait(apiKey: string, wait: number): Promise<void> {
-    this.DATA = this.DATA.set(apiKey, <Fixture>{
-      ...this.DATA.get(apiKey),
+    this.DATA = this.DATA.set(this.prefix + apiKey, <Fixture>{
+      ...this.DATA.get(this.prefix + apiKey),
       dev: {
-        ...this.DATA.get(apiKey).dev,
+        ...this.DATA.get(this.prefix + apiKey).dev,
         wait: wait,
       },
     });
   }
 
-  public async setState(apiKey: string, state: number): Promise<void> {
-    this.DATA = this.DATA.set(apiKey, <Fixture>{
-      ...this.DATA.get(apiKey),
+  public async setState(apiKey: string, status: number): Promise<void> {
+    this.DATA = this.DATA.set(this.prefix + apiKey, {
+      ...this.DATA.get(this.prefix + apiKey),
       dev: {
-        ...this.DATA.get(apiKey).dev,
-        state: state,
+        ...this.DATA.get(this.prefix + apiKey).dev,
+        status: status,
       },
     });
   }
@@ -105,7 +105,7 @@ export class DB implements IDB {
   }
 
   private setFixtureData(fixture: Fixture): void {
-    this.DATA = this.DATA.set(fixture.API_KEY, {
+    this.DATA = this.DATA.set(this.prefix + fixture.API_KEY, {
       ...fixture,
       dev: {
         status: 200,

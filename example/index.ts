@@ -1,14 +1,19 @@
 import * as browserSync from 'browser-sync';
 import { resolve } from 'path';
 
-import { DB, IDB, UrilRouter, baseContentsPath } from '../dist';
+import { DB, UtilRouter, baseContentsPath } from '../dist';
 
 import { AppSampleAPI } from './implement/sample.api';
 import { AppSampleDetailAPI } from './implement/sample.detail.api';
 
-const DB_BASE: IDB = new DB(resolve(__dirname, '_fixture'));
-const util = new UrilRouter(DB_BASE, 'api');
-const v2_util = new UrilRouter(DB_BASE, 'api/v2');
+const util = new UtilRouter(
+  new DB(resolve(__dirname, '_fixture'), 'api'),
+  'api',
+);
+const v2_util = new UtilRouter(
+  new DB(resolve(__dirname, '_fixture'), 'api/v2'),
+  'api/v2',
+);
 
 // registry mock api
 const MOCK_API: Array<

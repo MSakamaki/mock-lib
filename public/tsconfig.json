@@ -3,7 +3,8 @@
   "compilerOptions": {
     "outDir": "../dist/public",
     "declaration": false,
-    "rootDir": "."
+    "rootDir": ".",
+    "experimentalDecorators": true,
   },
   "include": [
     "**/*"

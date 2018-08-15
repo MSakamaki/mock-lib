@@ -96,8 +96,10 @@ export default class AppComponent extends Vue {
 
   public created() {
     this.$store.dispatch('api/getApis');
-    this.$store.watch((state: any) =>{
-      const apiState = state.api.states.find((s:any) => s.id === state.api.selectId) || {};
+    this.$store.watch((state: { api: any }) =>{
+      const apiState = state.api.states.find((s:any) =>{
+        return s.id === state.api.selectId && s.prefix === state.api.prefix;
+      }) || { data: {} };
       return apiState.data;
     }, data => { 
       this.jsonData = data;

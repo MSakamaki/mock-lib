@@ -48,13 +48,6 @@ export interface ApiDevStatus {
 }
 
 export class BaseAPI implements IApiClass {
-  /** fixutre用、APIの基本キー */
-  // public API_KEY: string;
-  /** api　レスポンスコード(wait, http status) (apiキー + .status) */
-  // private DEV_API_KEY: string;
-  // /** fixture data  (apiキー + .name)*/
-  // public NAME_API_KEY: string;
-
   /**
    * ローカルデータを取得する
    */

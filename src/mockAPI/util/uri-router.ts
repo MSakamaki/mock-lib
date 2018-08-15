@@ -6,7 +6,7 @@ import { BaseAPI } from '../base.api';
 import { CreateHandle } from './createhandle';
 
 
-export class UrilRouter {
+export class UtilRouter {
 
   public apiList: string[] = [];
 
