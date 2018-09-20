@@ -1,6 +1,6 @@
 
-
-const HOST = 'http://localhost:3030';
+// default: http://localhost:3030
+const HOST = '';
 
 /** メーカーモデルのAPI */
 export class DebugApisAPI {

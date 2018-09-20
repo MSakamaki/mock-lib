@@ -64,11 +64,12 @@ export class UtilRouter {
     const regExpUri = new RegExp(`^/${this.prefix}/${handle.REG_EXP_PATH || handle.API_KEY}`);
     const handler = new CreateHandle(handle);
     this.apiList.push(join(this.prefix, handle.API_KEY));
+    const route = ['/debug', this.prefix, handle.API_KEY].join('/');
 
     return [
       MiddleHandle,
       {
-        route: join('/debug', this.prefix, handle.API_KEY),
+        route: route,
         handle: (
           req: http.IncomingMessage,
           res: http.ServerResponse,
