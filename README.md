@@ -9,6 +9,7 @@
 git clone https://github.com/MSakamaki/mock-lib.git
 cd mock-lib
 npm install
+npm run build
 npm start
 ```
 
