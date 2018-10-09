@@ -59,7 +59,7 @@ export class DB implements IDB {
   public async reload(apiKey: string): Promise<any> {
     const updateAPIs: any[] = [
       ...this.readFixture(this.fixtreDir).filter(
-        (data: any) => data.API_KEY === this.prefix + apiKey,
+        (data: any) => data.API_KEY === apiKey,
       ),
     ];
 
