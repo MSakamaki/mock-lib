@@ -18,6 +18,11 @@ export interface IApiClass {
     res: http.ServerResponse,
     next: Function,
   ): void;
+  patch(
+    req: http.IncomingMessage,
+    res: http.ServerResponse,
+    next: Function,
+  ): void;
 
   debug_get(
     req: http.IncomingMessage,
@@ -107,6 +112,20 @@ export class BaseAPI implements IApiClass {
     res.end(
       JSON.stringify({
         ERROR_MESSAGE: 'PUT NOT FOUND',
+      }),
+    );
+  }
+
+  public patch(
+    _req: http.IncomingMessage,
+    res: http.ServerResponse,
+    _next: Function,
+  ) {
+    res.setHeader('Content-Type', 'application/json');
+    res.statusCode = 404;
+    res.end(
+      JSON.stringify({
+        ERROR_MESSAGE: 'PATCH NOT FOUND',
       }),
     );
   }
@@ -317,7 +336,6 @@ export class BaseAPI implements IApiClass {
   ): Promise<any> {
     const resJSON = async (resolve: Function, reject: Function) => {
       const appParam = await this.getDevelopState();
-      console.log('appParam.wait', appParam.wait);
       setTimeout(() => {
         res.statusCode = appParam.status;
         res.setHeader('Content-Type', 'application/json');

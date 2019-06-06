@@ -23,3 +23,6 @@ npm install -D mock-lib
 
 ### implitemnt [see example](./example)
 
+## CHANGE LOG
+
+- v1.0.5 - pach method support

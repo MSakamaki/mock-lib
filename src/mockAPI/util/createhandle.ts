@@ -26,6 +26,9 @@ export class CreateHandle {
       case 'PUT':
         this.handle.put(req, res, next);
         break;
+      case 'PATCH':
+        this.handle.patch(req, res, next);
+        break;
       case 'DELETE':
         this.handle.delete(req, res, next);
         break;

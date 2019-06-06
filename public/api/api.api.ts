@@ -16,7 +16,6 @@ export class DebugApisAPI {
   }
 
   async putState(prefix:string, url:string, wait:number, status:number, data:any ) {
-    console.log(prefix);
     return fetch(`/debug/${prefix ? `${prefix}/` : '' }${url}`, {
       method: 'PUT',
       body: JSON.stringify({
