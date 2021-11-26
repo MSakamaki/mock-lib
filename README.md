@@ -25,4 +25,5 @@ npm install -D mock-lib
 
 ## CHANGE LOG
 
+- v1.0.6 - case of empty prefix is also supported.
 - v1.0.5 - pach method support
