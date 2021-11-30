@@ -1,6 +1,6 @@
 {
   "name": "mock-lib",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "my simple mock server",
   "main": "index.js",
   "scripts": {

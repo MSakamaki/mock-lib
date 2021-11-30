@@ -74,6 +74,20 @@ export class BaseAPI implements IApiClass {
     public REG_EXP_PATH = '',
   ) {}
 
+  public head(
+    _req: http.IncomingMessage,
+    res: http.ServerResponse,
+    _next: Function,
+  ) {
+    res.setHeader('Content-Type', 'application/json');
+    res.statusCode = 404;
+    res.end(
+      JSON.stringify({
+        ERROR_MESSAGE: 'GET NOT FOUND',
+      }),
+    );
+  }
+
   public get(
     _req: http.IncomingMessage,
     res: http.ServerResponse,

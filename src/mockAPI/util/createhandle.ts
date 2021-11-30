@@ -17,6 +17,9 @@ export class CreateHandle {
     next: Function,
   ) {
     switch (req.method) {
+      case 'HEAD':
+        this.handle.head(req, res, next);
+        break;
       case 'GET':
         this.handle.get(req, res, next);
         break;
